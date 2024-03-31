@@ -62,15 +62,15 @@ scatter_lte <-
              x = as.numeric(year),
              col = Straw_Rate_treat)
   ) +
-  scale_x_continuous(breaks = c(1950,
+  scale_x_continuous(breaks = c(1951,
                                 as.vector(as.numeric(unique(soil_plots$year)))),
-                     minor_breaks = NULL) +
-  scale_y_continuous(breaks = seq(40,70,5))+
+                     minor_breaks = NULL, limits = c(1951,2019)) +
+  scale_y_continuous(breaks = seq(40,70,5),minor_breaks = NULL)+
   geom_point() +
   geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd))+
   labs(y = "Topsoil C Observed (Mg/ha)", x = "Year") +
 
-  scale_color_manual("Straw Rate Treatmnet",
+  scale_color_manual("Straw Rate Treatment",
                      values = colors_sr) +
   geom_line(aes(y = C_topsoil,
                 x = year,
@@ -84,8 +84,9 @@ scatter_lte <-
                  col = (Straw_Rate_treat)
   ), alpha = 0.1)+
   #scale_linetype_discrete("C Input Estimation")+
-  theme_bw()+theme(axis.text.x = element_text(angle = 60, hjust = 1),
-                   text = element_text(size = 11),
+  theme_bw()+theme(text = element_text(size = 11),
+                   axis.text.x = element_text(angle = 90, hjust = -0.5,
+                                              size = 9),
                    legend.position = "bottom")
 
 ggsave(plot=scatter_lte,
@@ -102,10 +103,12 @@ corr_block <-
   stat_poly_line(se=FALSE,color="#505050") +
   stat_cor(p.accuracy = 0.001, r.accuracy = 0.01) +
   geom_point(aes(col = Straw_Rate_treat)) +
+  scale_y_continuous(breaks = seq(40,70,10),minor_breaks = NULL)+
+  scale_x_continuous(breaks = seq(40,70,10),minor_breaks = NULL)+
   facet_grid(.~ Block) +
   geom_abline(intercept = 0, slope = 1) +
   labs(y = "SOC Observed (Mg/ha)", x = "SOC Simulated by rCTOOL (Mg/ha)") +
-  scale_color_manual("Straw Rate Treatmnet",
+  scale_color_manual("Straw Rate Treatment",
                      values = colors_sr)+
   theme(text = element_text(size = 11),
         legend.position = "bottom")
@@ -125,6 +128,18 @@ compare_plot |>
   summarise(
     RMSE = sqrt(mean((res)^2)),
     RMSE_rel=sqrt(mean((res)^2))/mean(Topsoil_C_obs,na.rm=TRUE)*100)
+
+
+ggsave(ggarrange(scatter_lte,corr_block,
+                 ncol=1,#nrow = 2,
+                 common.legend = TRUE,
+                 labels = c("a", "b"),
+                 legend=c("bottom")),
+       filename = "fig_tabl/compose2.jpeg",
+       width=186,
+       #height=182,
+       units = c("mm"),
+       dpi = 300)
 
 # Forest plots----
 

@@ -1,30 +1,34 @@
+# single plot toy example with 4 Mg/ha Spring Barley Straw removal implementation ---
 
-# single plot toy example implementation ---
+# Packages
+library(tidyverse)
+library(rCTOOL)
+#devtools::install("C:/Users/au710823/OneDrive - Aarhus universitet/rCTOOL", force = TRUE)
+#devtools::install_github(repo="francagiannini/rCTOOL")
 
 ## Time period ----
 period = rCTOOL::define_timeperiod(yr_start = 1951, yr_end = 2019)
 
 ## Managment an C inputs ----
 ## Monthly allocation
-## Fraction of manure that we consider is already Humidified
+## and raction of manure that we consider is already Humidified
 
 management = management_config(
   f_man_humification = 0.192,
   manure_monthly_allocation = c(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   plant_monthly_allocation = c(0, 0, 0, 8, 12, 16, 64, 0, 0, 0, 0, 0) / 100
-) # set to default
-
-## C input ----
-
-cin_id = define_Cinputs(
-  Cin_top = plot_Cinp[which(plot_Cinp$id == id),'Ctop'],
-  Cin_sub = plot_Cinp[which(plot_Cinp$id == id),'Csub'],
-  Cin_man = plot_Cinp[which(plot_Cinp$id == id),'Cman'],
-  time_config = period
 )
 
-
-
+## C input ----
+# from plot 208
+cinp_toy <- read.table("data_lte/rctool_toy_SR4.txt",
+                         header = TRUE)
+cin = define_Cinputs(
+  Cin_top = cinp_toy$Ctop,
+  Cin_sub = cinp_toy$Csub,
+  Cin_man =  cinp_toy$Cman,
+  time_config = period
+)
 
 ## Soil ----
 
@@ -54,7 +58,10 @@ soil = soil_config(Csoil_init = Cinit_ask_sr, # Initial C stock at 1m depth
                    cn = 1.51/0.126 # CN relation
 )
 
+soil_pools = initialize_soil_pools(soil_config = soil)
+
 ## Temperature ----
+# meteorological station Askov
 
 T_ave <- read.table("data_lte/temp_ask.txt")[,1]
 T_range <- rep(c(4, 5, 6, 8, 9, 9, 9, 8, 7, 6, 5, 5),69)
@@ -62,23 +69,18 @@ T_range <- rep(c(4, 5, 6, 8, 9, 9, 9, 8, 7, 6, 5, 5),69)
 temp = list(Tavg =T_ave,
             Trange_col = T_range)
 
-soil_pools = initialize_soil_pools(soil_config = soil)
-
 # Run scenario ----
-
-
-
-  scn_list[[id]] <- run_ctool(time_config = period,
-                              cin_config = cin_id,
+# core running function
+results_208 <- run_ctool(time_config = period,
+                              cin_config = cin,
                               m_config = management,
                               t_config = temp,
                               s_config = soil,
-                              soil_pools = soil_pools) |>
-    mutate(id_mod = paste(id))
-}
+                              soil_pools = soil_pools)
 
-
-plot_results <-
-  do.call("rbind", scn_list) |> mutate(idyear=interaction(id_mod,yrs))
-
-
+# plot temporal dynamic
+results_208 |>
+  mutate(time=make_date(year =yrs,month=mon)) |>
+  ggplot(aes(x=time,y=C_topsoil))+
+  geom_line()+
+  geom_smooth()

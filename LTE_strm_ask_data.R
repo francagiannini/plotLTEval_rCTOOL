@@ -143,60 +143,11 @@ plot_Cinp |>
   theme(axis.text.x = element_text(angle = 90), text=element_text(size=16),
         panel.background = NULL)
 
-# Temperature ----
+## Toy example
 
-T_ave <- read.table("data_lte/temp_ask.txt")[,1]
-T_range <- rep(c(4, 5, 6, 8, 9, 9, 9, 8, 7, 6, 5, 5),69)
+rctool_toy_cinp <- plot_Cinp |>
+  filter(Sample_ID == "208" &Allo == "Fixed") |>
+  select(c(year, Ctop, Csub,Cman))
 
-# Soil data ----
-
-## Fraction of manure that we consider is already Humidified
-fman <-0.192
-
-# Parameters referring to site-specific soil conditions
-
-# Initial C stock at 1m depth
-Cinit <- 1.41*20*1.54 + # 0-20 data from 1981
-  0.8*1.55*30 + # 20-50 # Bulk density aand C% from landmarkensite report askov
-  0.2*1.6*50  # 50-100 # Bulk density aand C% from landmarkensite report askov
-
-# Proportion of the total C allocated in topsoil
-
-Cproptop <- 1.41*25*1.54 /Cinit #0.47
-
-clay_top <- 0.11
-
-clay_sub <- (0.11*15+0.21*25+0.22*40)/80 # landmarkensite report askov
-
-# Diffusion index
-phi <- 0.054 #  JB 5 askov
-
-# respiration fraction
-fco2 <- 0.628
-
-# romification fraction
-fromi <- 0.012
-
-## decomposition rates ----
-kFOM <- 0.12
-
-kHUM <- 0.0028
-
-kROM <- 3.858e-05
-
-# transport rate
-ftr <- 0.003
-
-# initial pool distribution  bjarne
-fHUM_top <- 0.533
-
-fROM_top <- 0.405
-
-fHUM_sub <- 0.387
-
-fROM_sub <- 0.61
-
-# CN relation
-CN_top <- 1.41/0.126
-
-CN_sub <- 10 # defect
+write.table(rctool_toy_cinp,"data_lte/rctool_toy_SR4.txt",
+            row.names = FALSE)
