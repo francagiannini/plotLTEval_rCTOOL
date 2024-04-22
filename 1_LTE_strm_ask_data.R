@@ -49,18 +49,18 @@ plot_est <-
   mutate(plotyear = interaction(Sample_ID, year)) |>
   mutate(
     Straw_DM = as.numeric(ifelse(
-      between(year, 1951, 1979),
+      between(year, 1951, 1980),
       3.242505,
       paste(Straw_DM)
     )),
 
     Grain_DM = as.numeric(ifelse(
-      between(year, 1951, 1979),
+      between(year, 1951, 1980),
       3.361815,
       paste(Grain_DM)
     )),
     Straw_Rate = as.numeric(ifelse(
-      between(year, 1951, 1979),
+      between(year, 1951, 1980),
       4,
       recode(
         Sample_ID,
@@ -131,11 +131,7 @@ table(plot_Cinp$Straw_Rate, plot_Cinp$Sample_ID)
 
 plot_Cinp |>
   pivot_longer(cols = c(Ctop,Csub), names_to = "C_Source") |>
-  group_by(year,C_Source,Sample_ID,Allo) |>
-  summarise(mean = mean(value),
-            sdDM=sd(value)#/sqrt(n())
-  ) |>
-  ggplot(aes(y=mean, x=year, col=Allo, shape=C_Source)) +
+  ggplot(aes(y=value, x=year, col=Allo, shape=C_Source)) +
   scale_x_continuous(breaks = seq(1951,2019,3), minor_breaks = NULL)+
   geom_point() +
   scale_color_calc()+

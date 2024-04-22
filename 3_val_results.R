@@ -1,4 +1,4 @@
-# Contrasting scenarios ----
+# Contrasting simulated vs observed  ----
 
 library(tidyverse)
 library(rCTOOL)
@@ -54,8 +54,8 @@ compare_plot |>
 scatter_lte <-
   compare_plot |> filter(Allo=="Fixed") |>
   group_by(year, Straw_Rate_treat) |>
-  mutate(mean = mean(Topsoil_C_obs),
-         sd = sd(Topsoil_C_obs) #/sqrt(n())
+  mutate(mean = mean(Topsoil_C_obs, na.rm=TRUE),
+         sd = sd(Topsoil_C_obs, na.rm=TRUE) #/sqrt(n())
   ) |>
   ungroup() |>
   ggplot(aes(y = mean,
@@ -64,10 +64,10 @@ scatter_lte <-
   ) +
   scale_x_continuous(breaks = c(1951,
                                 as.vector(as.numeric(unique(soil_plots$year)))),
-                     minor_breaks = NULL, limits = c(1951,2019)) +
+                     minor_breaks = NULL, limits = c(1951,2020)) +
   scale_y_continuous(breaks = seq(40,70,5),minor_breaks = NULL)+
   geom_point() +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd))+
+  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = 0.4)+
   labs(y = "Topsoil C Observed (Mg/ha)", x = "Year") +
 
   scale_color_manual("Straw Rate Treatment",
@@ -85,7 +85,7 @@ scatter_lte <-
   ), alpha = 0.1)+
   #scale_linetype_discrete("C Input Estimation")+
   theme_bw()+theme(text = element_text(size = 11),
-                   axis.text.x = element_text(angle = 90, hjust = -0.5,
+                   axis.text.x = element_text(angle = 90, hjust = -0.2,
                                               size = 9),
                    legend.position = "bottom")
 
@@ -99,13 +99,14 @@ ggsave(plot=scatter_lte,
 # Correlation ----
 corr_block <-
   compare_plot |> filter(Allo=="Fixed") |>
+  mutate(block_facet=paste("Block:",Block, sep = " ")) |>
   ggplot(aes(x = C_topsoil, y = Topsoil_C_obs)) +
   stat_poly_line(se=FALSE,color="#505050") +
   stat_cor(p.accuracy = 0.001, r.accuracy = 0.01) +
   geom_point(aes(col = Straw_Rate_treat)) +
   scale_y_continuous(breaks = seq(40,70,10),minor_breaks = NULL)+
   scale_x_continuous(breaks = seq(40,70,10),minor_breaks = NULL)+
-  facet_grid(.~ Block) +
+  facet_grid(.~ block_facet) +
   geom_abline(intercept = 0, slope = 1) +
   labs(y = "SOC Observed (Mg/ha)", x = "SOC Simulated by rCTOOL (Mg/ha)") +
   scale_color_manual("Straw Rate Treatment",
@@ -145,32 +146,35 @@ ggsave(ggarrange(scatter_lte,corr_block,
 
 
 merge_meta_dep <- compare_plot |> drop_na(Topsoil_C_obs) |>
-  group_by(Allo, Straw_Rate_treat ,Block
+  filter(Allo=="Fixed") |>
+  group_by(Block ,Straw_Rate_treat #year#,
   ) |>
   summarise(
     mean_obs=mean(Topsoil_C_obs),
-    mean_est=mean(C_topsoil),
+    mean_sim=mean(C_topsoil),
 
     sd_obs=sd(Topsoil_C_obs),
-    sd_est=sd(C_topsoil),
+    sd_sim=sd(C_topsoil),
 
     se_obs=sd(Topsoil_C_obs)/sqrt(n()),
-    se_est=sd(C_topsoil)/sqrt(n()),
+    se_sim=sd(C_topsoil)/sqrt(n()),
 
     cv_obs=sd(Topsoil_C_obs)/mean(Topsoil_C_obs)*100,
-    cv_est=sd(C_topsoil)/mean(C_topsoil)*100,
+    cv_sim=sd(C_topsoil)/mean(C_topsoil)*100,
 
 
-    n=n()/2
-  ) |> unique() |> filter(Allo=="Fixed")
+    n_obs=n(),
+    n_sim=n()/3
+
+  ) |> unique()
 #filter(Allo=="PartFixedSt") #|>
 #mutate(
 #'Block & C Input Estimation'= interaction(Block, Allo)
 #)
 
-#### MD year strawrate ----
-mm <- metacont(n,mean_est,sd_est,
-               n, mean_obs, sd_obs,
+#### Mean differences by  straw rate levels incorporating a Block random effect ----
+mm <- metacont(n_obs, mean_obs, sd_obs,
+               n_sim, mean_sim,sd_sim,
 
                studlab=paste(Straw_Rate_treat
                              #,year
@@ -182,21 +186,63 @@ mm <- metacont(n,mean_est,sd_est,
                comb.random = TRUE,
                sm = "MD",
                hakn = TRUE,
-               method.tau = "DL",
+               method.tau = "REML",
                byvar = Block #`Block & C Input Estimation`
 )
 
 
 forest(mm,
-       layout = "RevMan5",#"JAMA",#
+       layout = "RevMan5",#"JAMA"
+       digits = 2,
        digits.sd = 2,
+       print.tau2 = gs("forest.tau2"),
        digits.tau2 = 2,
        col.by = "#505050",
-       label.e="Simulated",
-       label.c="Observed",
-       #label=  "Experimental desing",
+       label.c="Simulated",
+       label.e="Observed",
+       type.random="diamond",
+       type.subgroup = "circle",
+       type.study = "circle",
+       #type.common = "square",
        colgap = "0.5cm",
-       colgap.forest = "1cm",
-       col.square = "#2d6d66",
-       col.inside = "#2d6d78",
-       col.square.lines = "#2d6d50")
+       colgap.forest = "0.5cm",
+       col.circle = "#9e5d52",
+       col.circle.lines = "black",
+       col.diamond.random = "black",
+       fontsize = 11
+       # fs.study = 10,
+       # fs.random = 10,
+       # fs.random.labels = 10,
+       # fs.study.labels = 10,
+       # fs.test.subgroup = 10,
+       # fs.common.labels = 12,
+       # fs.heading = 12
+       )
+
+# Residual variance component analyisis
+
+compare_plot$resid <- compare_plot$Topsoil_C_obs-compare_plot$C_topsoil
+
+library(lme4)
+
+res_VCA<-lme4::lmer(
+  resid~1+
+    (1|year)+
+    #(1|Allo)+
+    (1|Block)
+  ,na.action=na.omit
+  ,REML=T
+  ,data=compare_plot)
+
+summary(res_VCA)
+
+vca <- as.data.frame(VarCorr(res_VCA))
+
+vca |> group_by(grp) |> summarise(
+  varprop = vcov / sum(vca$vcov) * 100) |> arrange(
+    varprop, grp) #|>
+  #ggplot(aes(y=varprop, x=1, fill=grp))+
+  #geom_bar(stat="identity")+
+  #theme_bw()
+
+

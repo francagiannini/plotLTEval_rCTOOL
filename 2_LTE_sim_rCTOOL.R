@@ -1,4 +1,4 @@
-#devtools::install("C:/Users/au710823/OneDrive - Aarhus universitet/rCTOOL", force = TRUE)
+devtools::install("C:/Users/au710823/OneDrive - Aarhus universitet/rCTOOL", force = TRUE)
 #devtools::install_github(repo="francagiannini/rCTOOL")
 
 library(tidyverse)
@@ -45,8 +45,7 @@ soil = soil_config(Csoil_init = Cinit_ask_sr, # Initial C stock at 1m depth
                    k_fom  = 0.12,
                    k_hum = 0.0028,
                    k_rom = 3.85e-5,
-                   ftr = 0.0025,
-                   cn = 1.51/0.126 # CN relation
+                   ftr = 0.0025
                    )
 
 ## Temperature ----
@@ -54,10 +53,16 @@ soil = soil_config(Csoil_init = Cinit_ask_sr, # Initial C stock at 1m depth
 T_ave <- read.table("data_lte/temp_ask.txt")[,1]
 T_range <- rep(c(4, 5, 6, 8, 9, 9, 9, 8, 7, 6, 5, 5),69)
 
-temp = list(Tavg =T_ave,
-            Trange_col = T_range)
+temp = bind_cols(month=period$timeperiod$mon,
+                 yr=period$timeperiod$yrs,
+                 Tavg =T_ave,
+                 Range = T_range)
 
-soil_pools = initialize_soil_pools(soil_config = soil)
+data('scenario_temperature')
+
+soil_pools = initialize_soil_pools(soil_config = soil,
+                                   cn = 1.51/0.126 # CN relation
+                                   )
 
 scn_list <- list()
 
