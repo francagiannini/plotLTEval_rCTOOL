@@ -22,7 +22,7 @@ soil_plots <- read.table(
   ) |>
   pivot_wider(names_from = 'variable',
               values_from = 'value') |>
-  mutate(Topsoil_C_obs=25*ifelse(year==1981,1.54,Bulk_Density_2020)*C,
+  mutate(Topsoil_C_obs= ifelse(year==1981,1.54,Bulk_Density_2020)*25*C,
          CN=C/N,
          year=as.numeric(year),
          year2=year*year,
@@ -61,16 +61,21 @@ plot_est <-
     )),
     Straw_Rate = as.numeric(ifelse(
       between(year, 1951, 1980),
-      4,
-      recode(
-        Sample_ID,
-        "201" = "0","606" = "0", "708" = "0",
-        "208" = "4","301" = "4","706" = "4",
-        "206" = "8","308" = "8","601" = "8",
-        "608" = "12","306" = "12", "701" = "12"
-      )
+      4*0.85,# 0.85 is humidity content
+      Straw_Rate*0.85
     ))
   )
+# complete wwith average the missing values
+
+plot_est |> filter(Crop=="SpringBarley") |>
+  summarise(mean(Straw_DM, na.rm = TRUE),mean(Grain_DM, na.rm=TRUE))
+
+
+plot_est <- plot_est |>
+  mutate(Straw_DM=ifelse(is.na(Straw_DM),3.157,Straw_DM),
+         Grain_DM=ifelse(is.na(Grain_DM),4.016,Grain_DM)) |>
+  arrange(Sample_ID,year)
+
 
 # C inputs calculations ----
 
@@ -132,7 +137,7 @@ table(plot_Cinp$Straw_Rate, plot_Cinp$Sample_ID)
 plot_Cinp |>
   pivot_longer(cols = c(Ctop,Csub), names_to = "C_Source") |>
   ggplot(aes(y=value, x=year, col=Allo, shape=C_Source)) +
-  scale_x_continuous(breaks = seq(1951,2019,3), minor_breaks = NULL)+
+  scale_x_continuous(breaks = seq(1951,2019,1), minor_breaks = NULL)+
   geom_point() +
   scale_color_calc()+
   labs(y="C Input (Mg/ha)")+
@@ -147,3 +152,4 @@ rctool_toy_cinp <- plot_Cinp |>
 
 write.table(rctool_toy_cinp,"data_lte/rctool_toy_SR4.txt",
             row.names = FALSE)
+

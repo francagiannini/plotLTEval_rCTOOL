@@ -14,10 +14,10 @@ theme_update(panel.grid = element_blank())
 
 colors_sr = c("0" ="#E54E21", "4" = "#ff950e", "8"="#0A9F9D", "12"="#273046")
 
-
 # merge observed and simulated data
 
-compare_plot <- merge(plot_results_dec, scn_plot_year,
+compare_plot <- merge(plot_results_oct#plot_results_dec,
+                      ,scn_plot_year,
                       by = 'plotyear', all.x = TRUE) |>
   select(!contains(".y"))
 
@@ -89,6 +89,9 @@ scatter_lte <-
                                               size = 9),
                    legend.position = "bottom")
 
+scatter_lte
+
+
 ggsave(plot=scatter_lte,
        filename = "fig_tabl/scatter2col.jpeg",
        width=182,
@@ -113,6 +116,8 @@ corr_block <-
                      values = colors_sr)+
   theme(text = element_text(size = 11),
         legend.position = "bottom")
+
+corr_block
 
 ggsave(plot=corr_block,
        filename = "fig_tabl/corr_block2col.jpeg",
@@ -144,9 +149,8 @@ ggsave(ggarrange(scatter_lte,corr_block,
 
 # Forest plots----
 
-
 merge_meta_dep <- compare_plot |> drop_na(Topsoil_C_obs) |>
-  filter(Allo=="Fixed") |>
+  filter(Allo=="Fixed") |> unique() |>
   group_by(Block ,Straw_Rate_treat #year#,
   ) |>
   summarise(

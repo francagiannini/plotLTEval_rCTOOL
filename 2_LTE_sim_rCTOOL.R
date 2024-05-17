@@ -1,4 +1,4 @@
-devtools::install("C:/Users/au710823/OneDrive - Aarhus universitet/rCTOOL", force = TRUE)
+#devtools::install("C:/Users/au710823/OneDrive - Aarhus universitet/rCTOOL", force = TRUE)
 #devtools::install_github(repo="francagiannini/rCTOOL")
 
 library(tidyverse)
@@ -14,7 +14,7 @@ period = rCTOOL::define_timeperiod(yr_start = 1951, yr_end = 2019)
 ## Fraction of manure that we consider is already Humidified
 
 management = management_config(
-  f_man_humification = 0.192,
+  f_man_humification = 0.12,
   manure_monthly_allocation = c(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   plant_monthly_allocation = c(0, 0, 0, 8, 12, 16, 64, 0, 0, 0, 0, 0) / 100
 ) # set to default
@@ -24,20 +24,20 @@ management = management_config(
 ## Soil ----
 
 # Initial C stock at 1m depth
-Cinit_ask_sr <- 1.51*25*1.54 + # 0-25 data from 1981
+Cinit_ask_sr <- 1.55*25*1.54 + # C % data from Askov average B5 and B3-field;depth, BD from Lermarken site
   0.8*1.55*25 + # 25-50 # Bulk density aand C% from landmarkensite report askov
   0.2*1.6*50  # 50-100 # Bulk density aand C% from landmarkensite report askov
 
 # Proportion of the total C allocated in topsoil
-Cproptop <- 1.51*25*1.54 /Cinit_ask_sr #
+Cproptop <- 1.55 *25*1.54/Cinit_ask_sr #
 
 soil = soil_config(Csoil_init = Cinit_ask_sr, # Initial C stock at 1m depth
-                   f_hum_top =  0.533,#
-                   f_rom_top =  0.405,#
-                   f_hum_sub =  0.387,#
-                   f_rom_sub =  0.610,#
+                   f_hum_top =  .4803,#0.533,#
+                   f_rom_top =  .4881,#0.405,#
+                   f_hum_sub =  .3123,#0.387,#
+                   f_rom_sub =  .6847,#0.610,#
                    Cproptop = Cproptop, # landmarkensite report askov
-                   clay_top = 0.11,
+                   clay_top = 0.117, # The mean clay content of the 12 specific plots was measured to 11.7% based on a sampling in 2020 (see Jensen et al., 2022).
                    clay_sub = (0.11*15+0.21*25+0.22*40)/80,
                    phi = 0.035,
                    f_co2 = 0.628,
@@ -61,12 +61,11 @@ temp = bind_cols(month=period$timeperiod$mon,
 data('scenario_temperature')
 
 soil_pools = initialize_soil_pools(soil_config = soil,
-                                   cn = 1.51/0.126 # CN relation
-                                   )
+                                   cn = 10 )
 
 scn_list <- list()
 
-# Run scenaios ----
+# Run scenarios ----
 
 for(id in 1:24) {
 
@@ -99,3 +98,9 @@ plot_results_dec <-
   merge(plot_results,plot_Cinp , by='idyear')|>
   filter(mon == 12)
 
+plot_results_oct <-
+  merge(plot_results,plot_Cinp , by='idyear')|>
+  filter(mon == 10)
+
+
+#oct81 <- plot_results_oct |> filter(year==1981) |> select(HUM_top,HUM_sub, ROM_top,ROM_sub, C_topsoil)

@@ -14,7 +14,7 @@ period = rCTOOL::define_timeperiod(yr_start = 1951, yr_end = 2019)
 ## and raction of manure that we consider is already Humidified
 
 management = management_config(
-  f_man_humification = 0.192,
+  f_man_humification = 0.12,
   manure_monthly_allocation = c(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   plant_monthly_allocation = c(0, 0, 0, 8, 12, 16, 64, 0, 0, 0, 0, 0) / 100
 )
