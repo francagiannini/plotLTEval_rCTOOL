@@ -78,11 +78,11 @@ scatter_lte <-
                 col = (Straw_Rate_treat)#,
                 #linetype = Allo
   )) +
-  geom_point(aes(y = C_topsoil,
-                 x = year,
-                 #group = interaction(Allo, Straw_Rate_treat),
-                 col = (Straw_Rate_treat)
-  ), alpha = 0.1)+
+  # geom_point(aes(y = C_topsoil,
+  #                x = year,
+  #                #group = interaction(Allo, Straw_Rate_treat),
+  #                col = (Straw_Rate_treat)
+  # ), alpha = 0.1)+
   #scale_linetype_discrete("C Input Estimation")+
   theme_bw()+theme(text = element_text(size = 11),
                    axis.text.x = element_text(angle = 90, hjust = -0.2,
