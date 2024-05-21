@@ -102,5 +102,8 @@ plot_results_oct <-
   merge(plot_results,plot_Cinp , by='idyear')|>
   filter(mon == 10)
 
+plot_results_juan <-
+  merge(plot_results,plot_Cinp , by='idyear')|>
+  filter(mon == 1)
 
 #oct81 <- plot_results_oct |> filter(year==1981) |> select(HUM_top,HUM_sub, ROM_top,ROM_sub, C_topsoil)

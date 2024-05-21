@@ -16,7 +16,7 @@ colors_sr = c("0" ="#E54E21", "4" = "#ff950e", "8"="#0A9F9D", "12"="#273046")
 
 # merge observed and simulated data
 
-compare_plot <- merge(plot_results_oct#plot_results_dec,
+compare_plot <- merge(plot_results_oct #_juan#_dec,
                       ,scn_plot_year,
                       by = 'plotyear', all.x = TRUE) |>
   select(!contains(".y"))
