@@ -147,7 +147,7 @@ ggsave(ggarrange(scatter_lte,corr_block,
        units = c("mm"),
        dpi = 300)
 
-# Forest plots----
+# Forest plot block----
 
 merge_meta_dep <- compare_plot |> drop_na(Topsoil_C_obs) |>
   filter(Allo=="Fixed") |> unique() |>
@@ -168,7 +168,7 @@ merge_meta_dep <- compare_plot |> drop_na(Topsoil_C_obs) |>
 
 
     n_obs=n(),
-    n_sim=n()/3
+    n_sim=n()
 
   ) |> unique()
 #filter(Allo=="PartFixedSt") #|>
@@ -223,7 +223,88 @@ forest(mm,
        # fs.heading = 12
        )
 
-# Residual variance component analyisis
+# Forest plot year----
+
+merge_meta_dep <- compare_plot |> drop_na(Topsoil_C_obs) |>
+  filter(Allo=="Fixed") |> unique() |>
+  group_by( year,Block #,Straw_Rate_treat,
+  ) |>
+  summarise(
+    mean_obs=mean(Topsoil_C_obs),
+    mean_sim=mean(C_topsoil),
+
+    sd_obs=sd(Topsoil_C_obs),
+    sd_sim=sd(C_topsoil),
+
+    se_obs=sd(Topsoil_C_obs)/sqrt(n()),
+    se_sim=sd(C_topsoil)/sqrt(n()),
+
+    cv_obs=sd(Topsoil_C_obs)/mean(Topsoil_C_obs)*100,
+    cv_sim=sd(C_topsoil)/mean(C_topsoil)*100,
+
+
+    n_obs=n(),
+    n_sim=n()
+
+  ) |> unique()
+#filter(Allo=="PartFixedSt") #|>
+#mutate(
+#'Block & C Input Estimation'= interaction(Block, Allo)
+#)
+
+#### Mean differences by  straw rate levels incorporating a Block random effect ----
+mm_y <- metacont(n_obs, mean_obs, sd_obs,
+               n_sim, mean_sim,sd_sim,
+
+               studlab=paste(#Straw_Rate_treat
+                             #,
+                 year
+                             #,Allo
+                             #,Block
+               ),
+               data=merge_meta_dep,
+               comb.fixed= FALSE,
+               comb.random = TRUE,
+               sm = "MD",
+               hakn = TRUE,
+               method.tau = "REML",
+               byvar = Block #`Block & C Input Estimation`
+)
+
+
+forest(mm_y,
+       layout = "RevMan5",#"JAMA"
+       digits = 2,
+       digits.sd = 2,
+       print.tau2 = gs("forest.tau2"),
+       digits.tau2 = 2,
+       col.by = "#505050",
+       label.c="Simulated",
+       label.e="Observed",
+       type.random="diamond",
+       type.subgroup = "circle",
+       type.study = "circle",
+       type.common = "square",
+       colgap = "0.5cm",
+       colgap.forest = "0.5cm",
+       col.circle = "#9e5d52",
+       col.circle.lines = "black",
+       col.diamond.random = "black",
+       fontsize = 10,
+       spacing = .8
+       # fs.study = 10,
+       # fs.random = 10,
+       # fs.random.labels = 10,
+       # fs.study.labels = 10,
+       # fs.test.subgroup = 10,
+       # fs.common.labels = 12,
+       # fs.heading = 12
+)
+
+
+
+
+# Residual variance component analyisis ----
 
 compare_plot$resid <- compare_plot$Topsoil_C_obs-compare_plot$C_topsoil
 

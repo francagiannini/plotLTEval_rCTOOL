@@ -138,11 +138,12 @@ plot_Cinp |>
   pivot_longer(cols = c(Ctop,Csub), names_to = "C_Source") |>
   ggplot(aes(y=value, x=year, col=Allo, shape=C_Source)) +
   scale_x_continuous(breaks = seq(1951,2019,1), minor_breaks = NULL)+
-  geom_point() +
+  geom_point(size=3, alpha=0.5) +
   scale_color_calc()+
   labs(y="C Input (Mg/ha)")+
   theme(axis.text.x = element_text(angle = 90), text=element_text(size=16),
-        panel.background = NULL)
+        panel.background = NULL,
+        legend.position = "bottom")
 
 ## Toy example
 
